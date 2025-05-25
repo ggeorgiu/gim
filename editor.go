@@ -91,16 +91,33 @@ func (e *Editor) HandleKey(ev *tcell.EventKey) bool {
 		return e.handleNormalMode(ev)
 	case Insert:
 		return e.handleInsertMode(ev)
+	case Command:
+		return e.handleCommandMode(ev)
 	default:
 		return false
 	}
 }
 
-func (e *Editor) handleNormalMode(ev *tcell.EventKey) bool {
+func (e *Editor) handleCommandMode(ev *tcell.EventKey) bool {
 	r := ev.Rune()
 	switch r {
 	case 'i':
 		e.mode = Insert
+	case 'n':
+		e.mode = Normal
+	}
+
+	return true
+}
+func (e *Editor) handleNormalMode(ev *tcell.EventKey) bool {
+	switch ev.Key() {
+	case tcell.KeyESC:
+		e.mode = Command
+		return true
+	}
+
+	r := ev.Rune()
+	switch r {
 	case 'l':
 		e.increaseX()
 	case 'h':
@@ -122,7 +139,6 @@ func (e *Editor) handleInsertMode(ev *tcell.EventKey) bool {
 		}
 		if e.cursorX == 0 {
 			e.lines = e.lines[:len(e.lines)]
-
 		}
 
 		line := e.lines[e.cursorY]
@@ -135,7 +151,7 @@ func (e *Editor) handleInsertMode(ev *tcell.EventKey) bool {
 		e.increaseY()
 		return true
 	case tcell.KeyESC:
-		e.mode = Normal
+		e.mode = Command
 		return true
 	}
 
@@ -150,7 +166,7 @@ func (e *Editor) handleInsertMode(ev *tcell.EventKey) bool {
 }
 
 func (e *Editor) decreaseX() {
-	if e.cursorX == 0 {
+	if e.cursorX-1 < 0 {
 		return
 	}
 
@@ -158,19 +174,25 @@ func (e *Editor) decreaseX() {
 }
 
 func (e *Editor) increaseX() {
-	if e.cursorY == len(e.lines[e.cursorY]) {
+	if e.cursorX+1 >= len(e.lines[e.cursorY]) {
 		return
 	}
+
 	e.cursorX++
 }
 
 func (e *Editor) decreaseY() {
-	if e.cursorY == 0 {
+	if e.cursorY-1 < 0 {
 		return
 	}
+
 	e.cursorY--
 }
 
 func (e *Editor) increaseY() {
+	if e.cursorY+1 >= len(e.lines) {
+		return
+	}
+
 	e.cursorY++
 }

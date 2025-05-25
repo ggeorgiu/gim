@@ -7,7 +7,7 @@ import (
 
 func main() {
 	if err := run(); err != nil {
-		slog.Error("application error", "err", err)
+		slog.Error("app error", "err", err)
 	}
 }
 
