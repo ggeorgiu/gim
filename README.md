@@ -1,18 +1,19 @@
 ## GIM
-- vim like text editor built it go
-- lightweight for-fun personal projects
-
+- vim-like text editor built it go
+- lightweight, for-fun, personal project
 
 ### Features
+- create a new file - todo
+- open existing file - todo
 
 #### Modes
-- INSERT
-- NORMAL
 - COMMAND
+- NORMAL
+- INSERT
 
 #### Status line
 - current mode
 - cursor position
 
-#### Command line
-- run command
+#### Commands
+`:q` - exit
