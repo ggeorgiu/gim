@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/gdamore/tcell/v2"
-	"log/slog"
 )
 
 type Mode int
@@ -33,7 +32,9 @@ type Editor struct {
 	cursorX    int
 	cursorY    int
 	mode       Mode
+	cmd        string
 	statusLine string
+	running    bool
 }
 
 func NewEditor() (*Editor, error) {
@@ -44,6 +45,7 @@ func NewEditor() (*Editor, error) {
 
 	defaultMode := Normal
 	e := Editor{
+		running: true,
 		screen:  screen,
 		lines:   []string{""},
 		cursorX: 0,
@@ -70,16 +72,14 @@ func initScreen() (tcell.Screen, error) {
 }
 
 func (e *Editor) Run() {
-	for {
+	for e.running {
 		e.Draw()
 		ev := e.screen.PollEvent()
 		switch ev := ev.(type) {
 		case *tcell.EventResize:
 			e.screen.Sync()
 		case *tcell.EventKey:
-			if !e.HandleKey(ev) {
-				return
-			}
+			e.HandleKey(ev)
 		}
 	}
 }
@@ -93,68 +93,101 @@ func (e *Editor) Draw() {
 		}
 	}
 
+	// set cmd line
+	if e.mode == Command {
+		_, h := e.screen.Size()
+		cmdLine := fmt.Sprintf(">> :%s", e.cmd)
+		for i, ch := range cmdLine {
+			e.screen.SetContent(i, h-2, ch, nil, tcell.StyleDefault)
+		}
+	}
+
 	// set content line
-	_, h := e.screen.Size()
-	e.statusLine = ">" + e.mode.String()
+	w, h := e.screen.Size()
+	e.statusLine = fmt.Sprintf("> %s <", e.mode.String())
 	for i, ch := range e.statusLine {
 		e.screen.SetContent(i, h-1, ch, nil, tcell.StyleDefault)
+	}
+
+	// set cursor position
+	cpos := fmt.Sprintf("> %d | %d <", e.cursorX, e.cursorY)
+	for i, ch := range cpos {
+		pos := w - len(cpos) + i
+		e.screen.SetContent(pos, h-1, ch, nil, tcell.StyleDefault)
 	}
 
 	e.screen.ShowCursor(e.cursorX, e.cursorY)
 	e.screen.Show()
 }
 
-func (e *Editor) HandleKey(ev *tcell.EventKey) bool {
+func (e *Editor) HandleKey(ev *tcell.EventKey) {
 	switch e.mode {
 	case Normal:
-		return e.handleNormalMode(ev)
+		e.handleNormalMode(ev)
 	case Insert:
-		return e.handleInsertMode(ev)
+		e.handleInsertMode(ev)
 	case Command:
-		return e.handleCommandMode(ev)
+		e.handleCommandMode(ev)
 	default:
-		return false
+		return
 	}
 }
 
-func (e *Editor) handleCommandMode(ev *tcell.EventKey) bool {
-	r := ev.Rune()
-	switch r {
-	case 'i':
-		e.mode = Insert
-	case 'n':
-		e.mode = Normal
-	}
-
-	return true
-}
-func (e *Editor) handleNormalMode(ev *tcell.EventKey) bool {
+func (e *Editor) handleCommandMode(ev *tcell.EventKey) {
 	switch ev.Key() {
 	case tcell.KeyESC:
-		e.mode = Command
-		return true
+		e.mode = Normal
+		e.cmd = ""
+		return
+	case tcell.KeyEnter:
+		e.mode = Normal
+		e.execCmd()
+		return
+	case tcell.KeyDEL:
+		e.cmd = e.cmd[:len(e.cmd)-1]
+		return
+	default:
+		r := ev.Rune()
+		e.cmd = e.cmd + string(r)
 	}
-
-	r := ev.Rune()
-	switch r {
-	case 'l':
-		e.increaseX()
-	case 'h':
-		e.decreaseX()
-	case 'j':
-		e.increaseY()
-	case 'k':
-		e.decreaseY()
-	}
-
-	return true
 }
 
-func (e *Editor) handleInsertMode(ev *tcell.EventKey) bool {
+func (e *Editor) execCmd() {
+	switch e.cmd {
+	case "q":
+		e.running = false
+	default:
+	}
+}
+func (e *Editor) handleNormalMode(ev *tcell.EventKey) {
+	r := ev.Rune()
+	switch r {
+	case ':':
+		e.mode = Command
+		return
+	case 'i':
+		e.mode = Insert
+		return
+	case 'l':
+		e.increaseX()
+		return
+	case 'h':
+		e.decreaseX()
+		return
+	case 'j':
+		e.increaseY()
+		return
+	case 'k':
+		e.decreaseY()
+		return
+	}
+}
+
+func (e *Editor) handleInsertMode(ev *tcell.EventKey) {
 	switch ev.Key() {
 	case tcell.KeyDEL:
 		if e.cursorX == 0 && e.cursorY == 0 {
-			return true
+			return
 		}
 		if e.cursorX == 0 {
 			e.lines = e.lines[:len(e.lines)]
@@ -163,25 +196,21 @@ func (e *Editor) handleInsertMode(ev *tcell.EventKey) bool {
 		line := e.lines[e.cursorY]
 		e.lines[e.cursorY] = line[:e.cursorX-1] + line[e.cursorX:]
 		e.decreaseX()
-		return true
+		return
 	case tcell.KeyEnter:
 		e.lines = append(e.lines, "")
 		e.cursorX = 0
 		e.increaseY()
-		return true
+		return
 	case tcell.KeyESC:
-		e.mode = Command
-		return true
+		e.mode = Normal
+		return
 	}
 
 	r := ev.Rune()
 	line := e.lines[e.cursorY]
 	e.lines[e.cursorY] = line[:e.cursorX] + string(r) + line[e.cursorX:]
-	slog.Info("increase x", "x", e.cursorX)
 	e.increaseX()
-	slog.Info("increased x", "x", e.cursorX)
-
-	return true
 }
 
 func (e *Editor) decreaseX() {
