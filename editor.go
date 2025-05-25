@@ -31,6 +31,8 @@ type Editor struct {
 	lines      []string
 	cursorX    int
 	cursorY    int
+	prevX      int
+	prevY      int
 	mode       Mode
 	cmd        string
 	statusLine string
@@ -110,13 +112,21 @@ func (e *Editor) Draw() {
 	}
 
 	// set cursor position
-	cpos := fmt.Sprintf("[ %d | %d ]", e.cursorX, e.cursorY)
+	x := e.cursorX
+	y := e.cursorY
+	if e.mode == Command {
+		x = e.prevX
+		y = e.prevY
+	}
+
+	cpos := fmt.Sprintf("[ line: %d | col:  %d ]", y, x)
 	for i, ch := range cpos {
 		pos := w - len(cpos) + i
 		e.screen.SetContent(pos, h-2, ch, nil, tcell.StyleDefault)
 	}
 
 	e.screen.ShowCursor(e.cursorX, e.cursorY)
+	e.screen.SetCursorStyle(tcell.CursorStyleBlinkingBlock)
 	e.screen.Show()
 }
 
@@ -137,6 +147,11 @@ func (e *Editor) handleCommandMode(ev *tcell.EventKey) {
 	switch ev.Key() {
 	case tcell.KeyESC:
 		e.mode = Normal
+		e.cursorX = e.prevX
+		e.cursorY = e.prevY
+
+		e.prevX = 0
+		e.prevY = 0
 		e.cmd = ""
 		return
 	case tcell.KeyEnter:
@@ -148,10 +163,13 @@ func (e *Editor) handleCommandMode(ev *tcell.EventKey) {
 			return
 		}
 		e.cmd = e.cmd[:len(e.cmd)-1]
+		e.cursorX--
+
 		return
 	default:
 		r := ev.Rune()
 		e.cmd = e.cmd + string(r)
+		e.cursorX++
 	}
 }
 
@@ -159,6 +177,7 @@ func (e *Editor) execCmd() {
 	switch e.cmd {
 	case "q":
 		e.running = false
+		return
 	default:
 	}
 }
@@ -166,6 +185,13 @@ func (e *Editor) handleNormalMode(ev *tcell.EventKey) {
 	r := ev.Rune()
 	switch r {
 	case ':':
+		e.prevX = e.cursorX
+		e.prevY = e.cursorY
+
+		_, h := e.screen.Size()
+		e.cursorX = 4 + len(e.cmd)
+		e.cursorY = h - 1
+
 		e.mode = Command
 		return
 	case 'i':
