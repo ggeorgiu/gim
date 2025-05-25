@@ -27,16 +27,17 @@ func (m Mode) String() string {
 }
 
 type Editor struct {
-	screen     tcell.Screen
-	lines      []string
-	cursorX    int
-	cursorY    int
-	prevX      int
-	prevY      int
-	mode       Mode
-	cmd        string
-	statusLine string
-	running    bool
+	screen        tcell.Screen
+	lines         []string
+	cursorX       int
+	cursorY       int
+	prevX         int
+	prevY         int
+	mode          Mode
+	cmd           string
+	statusLine    string
+	running       bool
+	contentOffset int
 }
 
 func NewEditor() (*Editor, error) {
@@ -74,6 +75,8 @@ func initScreen() (tcell.Screen, error) {
 }
 
 func (e *Editor) Run() {
+	defer e.screen.Fini()
+
 	for e.running {
 		e.Draw()
 		ev := e.screen.PollEvent()
@@ -150,8 +153,6 @@ func (e *Editor) handleCommandMode(ev *tcell.EventKey) {
 		e.cursorX = e.prevX
 		e.cursorY = e.prevY
 
-		e.prevX = 0
-		e.prevY = 0
 		e.cmd = ""
 		return
 	case tcell.KeyEnter:
