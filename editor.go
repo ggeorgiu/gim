@@ -14,6 +14,19 @@ const (
 	Command
 )
 
+func (m Mode) String() string {
+	switch m {
+	case Normal:
+		return "NRM"
+	case Insert:
+		return "INS"
+	case Command:
+		return "CMD"
+	default:
+		return "???"
+	}
+}
+
 type Editor struct {
 	screen     tcell.Screen
 	lines      []string
@@ -29,13 +42,13 @@ func NewEditor() (*Editor, error) {
 		return nil, fmt.Errorf("failed to init scren, err: %w", err)
 	}
 
+	defaultMode := Normal
 	e := Editor{
-		screen:     screen,
-		lines:      []string{""},
-		cursorX:    0,
-		cursorY:    0,
-		mode:       Insert,
-		statusLine: "> NORMAL",
+		screen:  screen,
+		lines:   []string{""},
+		cursorX: 0,
+		cursorY: 0,
+		mode:    defaultMode,
 	}
 
 	return &e, nil
@@ -80,7 +93,13 @@ func (e *Editor) Draw() {
 		}
 	}
 
-	slog.Info("cursor", "x", e.cursorX, "y", e.cursorY)
+	// set content line
+	_, h := e.screen.Size()
+	e.statusLine = ">" + e.mode.String()
+	for i, ch := range e.statusLine {
+		e.screen.SetContent(i, h-1, ch, nil, tcell.StyleDefault)
+	}
+
 	e.screen.ShowCursor(e.cursorX, e.cursorY)
 	e.screen.Show()
 }
