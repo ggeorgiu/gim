@@ -98,7 +98,7 @@ func (e *Editor) Draw() {
 		_, h := e.screen.Size()
 		cmdLine := fmt.Sprintf(">> :%s", e.cmd)
 		for i, ch := range cmdLine {
-			e.screen.SetContent(i, h-2, ch, nil, tcell.StyleDefault)
+			e.screen.SetContent(i, h-1, ch, nil, tcell.StyleDefault)
 		}
 	}
 
@@ -106,14 +106,14 @@ func (e *Editor) Draw() {
 	w, h := e.screen.Size()
 	e.statusLine = fmt.Sprintf("> %s <", e.mode.String())
 	for i, ch := range e.statusLine {
-		e.screen.SetContent(i, h-1, ch, nil, tcell.StyleDefault)
+		e.screen.SetContent(i, h-2, ch, nil, tcell.StyleDefault)
 	}
 
 	// set cursor position
-	cpos := fmt.Sprintf("> %d | %d <", e.cursorX, e.cursorY)
+	cpos := fmt.Sprintf("[ %d | %d ]", e.cursorX, e.cursorY)
 	for i, ch := range cpos {
 		pos := w - len(cpos) + i
-		e.screen.SetContent(pos, h-1, ch, nil, tcell.StyleDefault)
+		e.screen.SetContent(pos, h-2, ch, nil, tcell.StyleDefault)
 	}
 
 	e.screen.ShowCursor(e.cursorX, e.cursorY)
@@ -144,6 +144,9 @@ func (e *Editor) handleCommandMode(ev *tcell.EventKey) {
 		e.execCmd()
 		return
 	case tcell.KeyDEL:
+		if len(e.cmd) == 0 {
+			return
+		}
 		e.cmd = e.cmd[:len(e.cmd)-1]
 		return
 	default:
@@ -222,7 +225,7 @@ func (e *Editor) decreaseX() {
 }
 
 func (e *Editor) increaseX() {
-	if e.cursorX+1 >= len(e.lines[e.cursorY]) {
+	if e.cursorX+1 > len(e.lines[e.cursorY]) {
 		return
 	}
 

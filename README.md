@@ -13,3 +13,6 @@
 #### Status line
 - current mode
 - cursor position
+
+#### Command line
+- run command
