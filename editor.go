@@ -194,6 +194,9 @@ func (e *Editor) handleInsertMode(ev *tcell.EventKey) {
 		}
 		if e.cursorX == 0 {
 			e.lines = e.lines[:len(e.lines)]
+			e.decreaseY()
+			e.cursorX = len(e.lines[e.cursorY])
+			return
 		}
 
 		line := e.lines[e.cursorY]
