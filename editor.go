@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gdamore/tcell/v2"
+	"math"
 )
 
 type Mode int
@@ -95,7 +96,16 @@ func (e *Editor) Draw() {
 	e.screen.Clear()
 
 	for y, line := range e.lines {
-		ln := fmt.Sprintf("%3d", y+1)
+		currY := e.cursorY
+		if e.mode == Command {
+			currY = e.prevY
+		}
+
+		ln := fmt.Sprintf("%3d", int(math.Abs(float64(currY-y))))
+		if y == currY {
+			ln = fmt.Sprintf("%2d ", y+1)
+		}
+
 		for x, ch := range ln {
 			e.screen.SetContent(x, y, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))
 		}
