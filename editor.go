@@ -47,13 +47,15 @@ func NewEditor() (*Editor, error) {
 	}
 
 	defaultMode := Normal
+	offset := 4
 	e := Editor{
-		running: true,
-		screen:  screen,
-		lines:   []string{""},
-		cursorX: 0,
-		cursorY: 0,
-		mode:    defaultMode,
+		running:       true,
+		screen:        screen,
+		lines:         []string{""},
+		cursorX:       offset,
+		cursorY:       0,
+		mode:          defaultMode,
+		contentOffset: offset,
 	}
 
 	return &e, nil
@@ -93,8 +95,13 @@ func (e *Editor) Draw() {
 	e.screen.Clear()
 
 	for y, line := range e.lines {
+		ln := fmt.Sprintf("%3d", y+1)
+		for x, ch := range ln {
+			e.screen.SetContent(x, y, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))
+		}
+		e.screen.SetContent(e.contentOffset-1, y, '│', nil, tcell.StyleDefault.Foreground(tcell.ColorYellowGreen).Bold(true))
 		for x, ch := range line {
-			e.screen.SetContent(x, y, ch, nil, tcell.StyleDefault)
+			e.screen.SetContent(x+e.contentOffset, y, ch, nil, tcell.StyleDefault)
 		}
 	}
 
@@ -103,7 +110,7 @@ func (e *Editor) Draw() {
 		_, h := e.screen.Size()
 		cmdLine := fmt.Sprintf(">> :%s", e.cmd)
 		for i, ch := range cmdLine {
-			e.screen.SetContent(i, h-1, ch, nil, tcell.StyleDefault)
+			e.screen.SetContent(i, h-1, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))
 		}
 	}
 
@@ -111,7 +118,7 @@ func (e *Editor) Draw() {
 	w, h := e.screen.Size()
 	e.statusLine = fmt.Sprintf("> %s <", e.mode.String())
 	for i, ch := range e.statusLine {
-		e.screen.SetContent(i, h-2, ch, nil, tcell.StyleDefault)
+		e.screen.SetContent(i, h-2, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))
 	}
 
 	// set cursor position
@@ -125,11 +132,11 @@ func (e *Editor) Draw() {
 	cpos := fmt.Sprintf("[ line: %d | col:  %d ]", y, x)
 	for i, ch := range cpos {
 		pos := w - len(cpos) + i
-		e.screen.SetContent(pos, h-2, ch, nil, tcell.StyleDefault)
+		e.screen.SetContent(pos, h-2, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))
 	}
 
 	e.screen.ShowCursor(e.cursorX, e.cursorY)
-	e.screen.SetCursorStyle(tcell.CursorStyleBlinkingBlock)
+	e.screen.SetCursorStyle(tcell.CursorStyleBlinkingBlock, tcell.ColorBlue)
 	e.screen.Show()
 }
 
@@ -160,7 +167,7 @@ func (e *Editor) handleCommandMode(ev *tcell.EventKey) {
 		e.execCmd()
 		return
 	case tcell.KeyDEL:
-		if len(e.cmd) == 0 {
+		if len(e.cmd) == e.zeroX() {
 			return
 		}
 		e.cmd = e.cmd[:len(e.cmd)-1]
@@ -216,23 +223,23 @@ func (e *Editor) handleNormalMode(ev *tcell.EventKey) {
 func (e *Editor) handleInsertMode(ev *tcell.EventKey) {
 	switch ev.Key() {
 	case tcell.KeyDEL:
-		if e.cursorX == 0 && e.cursorY == 0 {
+		if e.cursorX == e.zeroX() && e.cursorY == 0 {
 			return
 		}
-		if e.cursorX == 0 {
-			e.lines = e.lines[:len(e.lines)]
+		if e.cursorX == e.zeroX() {
+			e.lines = e.lines[:len(e.lines)-1]
 			e.decreaseY()
-			e.cursorX = len(e.lines[e.cursorY])
+			e.cursorX = len(e.lines[e.cursorY]) + e.contentOffset
 			return
 		}
 
 		line := e.lines[e.cursorY]
-		e.lines[e.cursorY] = line[:e.cursorX-1] + line[e.cursorX:]
+		e.lines[e.cursorY] = line[:e.cursorX-e.contentOffset-1] + line[e.cursorX-e.contentOffset:]
 		e.decreaseX()
 		return
 	case tcell.KeyEnter:
 		e.lines = append(e.lines, "")
-		e.cursorX = 0
+		e.cursorX = e.zeroX()
 		e.increaseY()
 		return
 	case tcell.KeyESC:
@@ -242,12 +249,12 @@ func (e *Editor) handleInsertMode(ev *tcell.EventKey) {
 
 	r := ev.Rune()
 	line := e.lines[e.cursorY]
-	e.lines[e.cursorY] = line[:e.cursorX] + string(r) + line[e.cursorX:]
+	e.lines[e.cursorY] = line[:e.cursorX-e.contentOffset] + string(r) + line[e.cursorX-e.contentOffset:]
 	e.increaseX()
 }
 
 func (e *Editor) decreaseX() {
-	if e.cursorX-1 < 0 {
+	if e.cursorX-1 < e.zeroX() {
 		return
 	}
 
@@ -255,7 +262,7 @@ func (e *Editor) decreaseX() {
 }
 
 func (e *Editor) increaseX() {
-	if e.cursorX+1 > len(e.lines[e.cursorY]) {
+	if e.cursorX+1 > len(e.lines[e.cursorY])+e.contentOffset {
 		return
 	}
 
@@ -276,4 +283,8 @@ func (e *Editor) increaseY() {
 	}
 
 	e.cursorY++
+}
+
+func (e *Editor) zeroX() int {
+	return e.contentOffset
 }

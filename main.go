@@ -6,12 +6,12 @@ import (
 )
 
 func main() {
-	if err := run(); err != nil {
+	if err := run(os.Args); err != nil {
 		slog.Error("app error", "err", err)
 	}
 }
 
-func run() error {
+func run(_ []string) error {
 	logFile, err := os.OpenFile(".debug/debug.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
