@@ -39,6 +39,7 @@ type Editor struct {
 	statusLine    string
 	running       bool
 	contentOffset int
+	maxLen        int
 }
 
 func NewEditor() (*Editor, error) {
@@ -213,6 +214,7 @@ func (e *Editor) handleNormalMode(ev *tcell.EventKey) {
 		e.mode = Command
 		return
 	case 'i':
+		e.maxLen = 0
 		e.mode = Insert
 		return
 	case 'l':
@@ -222,9 +224,23 @@ func (e *Editor) handleNormalMode(ev *tcell.EventKey) {
 		e.decreaseX()
 		return
 	case 'j':
+		if e.maxLen == 0 {
+			if e.cursorX-e.contentOffset == len(e.lines[e.cursorY]) {
+				e.maxLen = -1
+			} else {
+				e.maxLen = e.cursorX
+			}
+		}
 		e.increaseY()
 		return
 	case 'k':
+		if e.maxLen == 0 {
+			if e.cursorX-e.contentOffset == len(e.lines[e.cursorY]) {
+				e.maxLen = -1
+			} else {
+				e.maxLen = e.cursorX
+			}
+		}
 		e.decreaseY()
 		return
 	}
@@ -285,6 +301,16 @@ func (e *Editor) decreaseY() {
 	}
 
 	e.cursorY--
+	if e.maxLen == -1 {
+		e.cursorX = len(e.lines[e.cursorY]) + e.contentOffset
+		return
+	}
+	if len(e.lines[e.cursorY]) < e.maxLen {
+		e.cursorX = len(e.lines[e.cursorY]) + e.contentOffset
+		return
+	}
+
+	e.cursorX = e.maxLen + e.contentOffset
 }
 
 func (e *Editor) increaseY() {
@@ -293,6 +319,16 @@ func (e *Editor) increaseY() {
 	}
 
 	e.cursorY++
+	if e.maxLen == -1 {
+		e.cursorX = len(e.lines[e.cursorY]) + e.contentOffset
+		return
+	}
+	if len(e.lines[e.cursorY]) < e.maxLen {
+		e.cursorX = len(e.lines[e.cursorY]) + e.contentOffset
+		return
+	}
+
+	e.cursorX = e.maxLen + e.contentOffset
 }
 
 func (e *Editor) zeroX() int {
