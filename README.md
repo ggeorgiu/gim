@@ -2,10 +2,6 @@
 - vim-like text editor built it go
 - lightweight, for-fun, personal project
 
-### Features
-- create a new file - todo
-- open existing file - todo
-
 #### Modes
 - COMMAND
 - NORMAL
@@ -17,3 +13,9 @@
 
 #### Commands
 `:q` - exit
+
+#### TODO
+ - [ ] scrolling
+ - [ ] open file
+ - [ ] write to file
+ - [ ] refactor
