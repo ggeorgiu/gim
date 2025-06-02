@@ -28,18 +28,22 @@ func (m Mode) String() string {
 }
 
 type Editor struct {
-	screen        tcell.Screen
-	lines         []string
-	cursorX       int
-	cursorY       int
-	prevX         int
-	prevY         int
-	mode          Mode
-	cmd           string
-	statusLine    string
-	running       bool
-	contentOffset int
-	maxLen        int
+	screen            tcell.Screen
+	contentBufferPre  []string
+	content           []string
+	contentBufferPost []string
+	cursorX           int
+	cursorY           int
+	prevX             int
+	prevY             int
+	cmd               string
+	statusLine        string
+	running           bool
+	contentOffset     int
+	maxLen            int
+	currHeight        int
+	currWidth         int
+	mode              Mode
 }
 
 func NewEditor() (*Editor, error) {
@@ -53,7 +57,7 @@ func NewEditor() (*Editor, error) {
 	e := Editor{
 		running:       true,
 		screen:        screen,
-		lines:         []string{""},
+		content:       []string{""},
 		cursorX:       offset,
 		cursorY:       0,
 		mode:          defaultMode,
@@ -96,7 +100,11 @@ func (e *Editor) Run() {
 func (e *Editor) Draw() {
 	e.screen.Clear()
 
-	for y, line := range e.lines {
+	w, h := e.screen.Size()
+	e.currHeight = h
+	e.currWidth = w
+
+	for y, line := range e.content {
 		currY := e.cursorY
 		if e.mode == Command {
 			currY = e.prevY
@@ -118,18 +126,15 @@ func (e *Editor) Draw() {
 
 	// set cmd line
 	if e.mode == Command {
-		_, h := e.screen.Size()
 		cmdLine := fmt.Sprintf(">> :%s", e.cmd)
 		for i, ch := range cmdLine {
-			e.screen.SetContent(i, h-1, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))
+			e.screen.SetContent(i, e.currHeight-1, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))
 		}
 	}
 
-	// set content line
-	w, h := e.screen.Size()
 	e.statusLine = fmt.Sprintf("> %s <", e.mode.String())
 	for i, ch := range e.statusLine {
-		e.screen.SetContent(i, h-2, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))
+		e.screen.SetContent(i, e.currHeight-2, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))
 	}
 
 	// set cursor position
@@ -142,8 +147,8 @@ func (e *Editor) Draw() {
 
 	cpos := fmt.Sprintf("[ line: %d | col:  %d ]", y, x)
 	for i, ch := range cpos {
-		pos := w - len(cpos) + i
-		e.screen.SetContent(pos, h-2, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))
+		pos := e.currWidth - len(cpos) + i
+		e.screen.SetContent(pos, e.currHeight-2, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))
 	}
 
 	e.screen.ShowCursor(e.cursorX, e.cursorY)
@@ -225,7 +230,7 @@ func (e *Editor) handleNormalMode(ev *tcell.EventKey) {
 		return
 	case 'j':
 		if e.maxLen == 0 {
-			if e.cursorX-e.contentOffset == len(e.lines[e.cursorY]) {
+			if e.cursorX-e.contentOffset == len(e.content[e.cursorY]) {
 				e.maxLen = -1
 			} else {
 				e.maxLen = e.cursorX
@@ -235,7 +240,7 @@ func (e *Editor) handleNormalMode(ev *tcell.EventKey) {
 		return
 	case 'k':
 		if e.maxLen == 0 {
-			if e.cursorX-e.contentOffset == len(e.lines[e.cursorY]) {
+			if e.cursorX-e.contentOffset == len(e.content[e.cursorY]) {
 				e.maxLen = -1
 			} else {
 				e.maxLen = e.cursorX
@@ -253,18 +258,18 @@ func (e *Editor) handleInsertMode(ev *tcell.EventKey) {
 			return
 		}
 		if e.cursorX == e.zeroX() {
-			e.lines = e.lines[:len(e.lines)-1]
+			e.content = e.content[:len(e.content)-1]
 			e.decreaseY()
-			e.cursorX = len(e.lines[e.cursorY]) + e.contentOffset
+			e.cursorX = len(e.content[e.cursorY]) + e.contentOffset
 			return
 		}
 
-		line := e.lines[e.cursorY]
-		e.lines[e.cursorY] = line[:e.cursorX-e.contentOffset-1] + line[e.cursorX-e.contentOffset:]
+		line := e.content[e.cursorY]
+		e.content[e.cursorY] = line[:e.cursorX-e.contentOffset-1] + line[e.cursorX-e.contentOffset:]
 		e.decreaseX()
 		return
 	case tcell.KeyEnter:
-		e.lines = append(e.lines, "")
+		e.content = append(e.content, "")
 		e.cursorX = e.zeroX()
 		e.increaseY()
 		return
@@ -274,8 +279,8 @@ func (e *Editor) handleInsertMode(ev *tcell.EventKey) {
 	}
 
 	r := ev.Rune()
-	line := e.lines[e.cursorY]
-	e.lines[e.cursorY] = line[:e.cursorX-e.contentOffset] + string(r) + line[e.cursorX-e.contentOffset:]
+	line := e.content[e.cursorY]
+	e.content[e.cursorY] = line[:e.cursorX-e.contentOffset] + string(r) + line[e.cursorX-e.contentOffset:]
 	e.increaseX()
 }
 
@@ -288,7 +293,7 @@ func (e *Editor) decreaseX() {
 }
 
 func (e *Editor) increaseX() {
-	if e.cursorX+1 > len(e.lines[e.cursorY])+e.contentOffset {
+	if e.cursorX+1 > len(e.content[e.cursorY])+e.contentOffset {
 		return
 	}
 
@@ -302,11 +307,11 @@ func (e *Editor) decreaseY() {
 
 	e.cursorY--
 	if e.maxLen == -1 {
-		e.cursorX = len(e.lines[e.cursorY]) + e.contentOffset
+		e.cursorX = len(e.content[e.cursorY]) + e.contentOffset
 		return
 	}
-	if len(e.lines[e.cursorY]) < e.maxLen {
-		e.cursorX = len(e.lines[e.cursorY]) + e.contentOffset
+	if len(e.content[e.cursorY]) < e.maxLen {
+		e.cursorX = len(e.content[e.cursorY]) + e.contentOffset
 		return
 	}
 
@@ -314,17 +319,17 @@ func (e *Editor) decreaseY() {
 }
 
 func (e *Editor) increaseY() {
-	if e.cursorY+1 >= len(e.lines) {
+	if e.cursorY+1 >= len(e.content) {
 		return
 	}
 
 	e.cursorY++
 	if e.maxLen == -1 {
-		e.cursorX = len(e.lines[e.cursorY]) + e.contentOffset
+		e.cursorX = len(e.content[e.cursorY]) + e.contentOffset
 		return
 	}
-	if len(e.lines[e.cursorY]) < e.maxLen {
-		e.cursorX = len(e.lines[e.cursorY]) + e.contentOffset
+	if len(e.content[e.cursorY]) < e.maxLen {
+		e.cursorX = len(e.content[e.cursorY]) + e.contentOffset
 		return
 	}
 

@@ -18,4 +18,5 @@
  - [ ] scrolling
  - [ ] open file
  - [ ] write to file
+ - [ ] properly handle new line
  - [ ] refactor
