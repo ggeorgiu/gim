@@ -30,7 +30,7 @@ func (sl *statusLine) draw() {
 		sl.screen.SetContent(i, sl.bounds.y1, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))
 	}
 
-	cpos := fmt.Sprintf("[ line: %d | col:  %d ]", sl.editor.cursorY(), sl.editor.cursorX())
+	cpos := fmt.Sprintf("[ line: %2d | col: %2d ]", sl.editor.cursorY(), sl.editor.cursorX())
 	for i, ch := range cpos {
 		pos := sl.bounds.x1 - len(cpos) + i
 		sl.screen.SetContent(pos, sl.bounds.y1, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))
