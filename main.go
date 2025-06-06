@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"github.com/gdamore/tcell/v2"
 	"log/slog"
 	"os"
 )
@@ -23,11 +25,27 @@ func run(_ []string) error {
 	logger := slog.New(handler)
 	slog.SetDefault(logger)
 
-	e, err := NewEditor()
+	screen, err := initScreen()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to init scren, err: %w", err)
 	}
 
-	e.Run()
+	g := newGim(screen)
+	g.Run()
+
 	return nil
+}
+
+func initScreen() (tcell.Screen, error) {
+	screen, err := tcell.NewScreen()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := screen.Init(); err != nil {
+		return nil, err
+	}
+
+	screen.SetStyle(tcell.StyleDefault)
+	return screen, nil
 }
