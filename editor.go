@@ -8,6 +8,7 @@ type editor struct {
 	screen  tcell.Screen
 	cursor  *cursor
 	bounds  bounds
+	mode    mode
 	content []string
 }
 
@@ -102,4 +103,23 @@ func (e *editor) recvCursor() {
 
 func (e *editor) currentLine() string {
 	return e.content[e.cursor.y]
+}
+
+func (e *editor) cursorX() int {
+	if e.mode == command {
+		return e.cursor.prevX - e.bounds.x1
+	}
+
+	return e.cursor.x - e.bounds.x1
+}
+func (e *editor) cursorY() int {
+	if e.mode == command {
+		return e.cursor.prevY
+	}
+
+	return e.cursor.y
+}
+
+func (e *editor) setMode(m mode) {
+	e.mode = m
 }

@@ -33,17 +33,21 @@ type gim struct {
 	editor     *editor
 	statusLine *statusLine
 	cmdLine    *cmdLine
+	numberLine *numberLine
 }
 
 func newGim(s tcell.Screen) *gim {
-	c := &cursor{screen: s}
+	c := &cursor{screen: s, x: 5}
+	e := newEditor(s, c)
+	nl := newNumberLine(s, e, c)
 
 	g := gim{
 		running:    true,
 		screen:     s,
 		cursor:     c,
-		editor:     newEditor(s, c),
-		statusLine: newStatusLine(s, c),
+		numberLine: nl,
+		editor:     e,
+		statusLine: newStatusLine(s, e),
 		cmdLine:    newCmdLine(s, c),
 	}
 
@@ -69,7 +73,8 @@ func (g *gim) Run() {
 func (g *gim) Refresh() {
 	w, h := g.screen.Size()
 
-	g.editor.refresh(bounds{0, 0, 0, h - 3})
+	g.editor.refresh(bounds{5, 0, 0, h - 3})
+	g.numberLine.refresh(bounds{0, 4, 0, h})
 	g.statusLine.refresh(bounds{w, 0, h - 2, 0})
 	g.cmdLine.refresh(bounds{0, 0, h - 1, 0})
 }
@@ -80,6 +85,7 @@ func (g *gim) Draw() {
 	g.cursor.draw()
 	g.editor.draw()
 	g.statusLine.draw()
+	g.numberLine.draw()
 
 	if g.mode == command {
 		g.cmdLine.draw()
@@ -156,6 +162,6 @@ func (g *gim) handleInsertMode(ev *tcell.EventKey) {
 }
 
 func (g *gim) setMode(m mode) {
-	g.statusLine.setMode(m)
+	g.editor.setMode(m)
 	g.mode = m
 }
