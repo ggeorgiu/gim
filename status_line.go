@@ -37,7 +37,7 @@ func (sl *statusLine) draw() {
 
 	var x = sl.cursor.x
 	var y = sl.cursor.y
-	if sl.mode == Command {
+	if sl.mode == command {
 		x = sl.cursor.prevX
 		y = sl.cursor.prevY
 	}

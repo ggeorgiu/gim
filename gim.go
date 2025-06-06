@@ -7,18 +7,18 @@ import (
 type mode int
 
 const (
-	Normal mode = iota
-	Insert
-	Command
+	normal mode = iota
+	insert
+	command
 )
 
 func (m mode) String() string {
 	switch m {
-	case Normal:
+	case normal:
 		return "NRM"
-	case Insert:
+	case insert:
 		return "INS"
-	case Command:
+	case command:
 		return "CMD"
 	default:
 		return "???"
@@ -81,7 +81,7 @@ func (g *gim) Draw() {
 	g.editor.draw()
 	g.statusLine.draw()
 
-	if g.mode == Command {
+	if g.mode == command {
 		g.cmdLine.draw()
 	}
 
@@ -90,11 +90,11 @@ func (g *gim) Draw() {
 
 func (g *gim) HandleKey(ev *tcell.EventKey) {
 	switch g.mode {
-	case Normal:
+	case normal:
 		g.handleNormalMode(ev)
-	case Insert:
+	case insert:
 		g.handleInsertMode(ev)
-	case Command:
+	case command:
 		g.handleCommandMode(ev)
 	default:
 		return
@@ -106,7 +106,7 @@ func (g *gim) handleCommandMode(ev *tcell.EventKey) {
 	case tcell.KeyESC:
 		g.editor.recvCursor()
 		g.cmdLine.reset()
-		g.setMode(Normal)
+		g.setMode(normal)
 
 		return
 	case tcell.KeyEnter:
@@ -114,7 +114,7 @@ func (g *gim) handleCommandMode(ev *tcell.EventKey) {
 
 		g.editor.recvCursor()
 		g.cmdLine.reset()
-		g.setMode(Normal)
+		g.setMode(normal)
 		return
 	default:
 		g.cmdLine.handleKey(ev)
@@ -135,10 +135,10 @@ func (g *gim) handleNormalMode(ev *tcell.EventKey) {
 	switch r {
 	case ':':
 		g.cmdLine.recvCursor()
-		g.setMode(Command)
+		g.setMode(command)
 		return
 	case 'i':
-		g.setMode(Insert)
+		g.setMode(insert)
 		return
 	case 'l':
 		g.cursor.right()
@@ -158,7 +158,7 @@ func (g *gim) handleNormalMode(ev *tcell.EventKey) {
 func (g *gim) handleInsertMode(ev *tcell.EventKey) {
 	switch ev.Key() {
 	case tcell.KeyESC:
-		g.setMode(Normal)
+		g.setMode(normal)
 		return
 	default:
 		g.editor.handleKeyInInsertMode(ev)
