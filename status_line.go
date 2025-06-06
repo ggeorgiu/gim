@@ -8,12 +8,14 @@ import (
 type statusLine struct {
 	screen tcell.Screen
 	bounds bounds
+	cursor *cursor
 	mode   mode
 }
 
-func newStatusLine(s tcell.Screen) *statusLine {
+func newStatusLine(s tcell.Screen, c *cursor) *statusLine {
 	l := statusLine{
 		screen: s,
+		cursor: c,
 	}
 
 	return &l
@@ -29,12 +31,18 @@ func (sl *statusLine) refresh(b bounds) {
 
 func (sl *statusLine) draw() {
 	line := fmt.Sprintf("> %s <", sl.mode.String())
-
 	for i, ch := range line {
 		sl.screen.SetContent(i, sl.bounds.y1, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))
 	}
 
-	cpos := fmt.Sprintf("[ line: %d | col:  %d ]", 0, 0)
+	var x = sl.cursor.x
+	var y = sl.cursor.y
+	if sl.mode == Command {
+		x = sl.cursor.prevX
+		y = sl.cursor.prevY
+	}
+
+	cpos := fmt.Sprintf("[ line: %d | col:  %d ]", y, x)
 	for i, ch := range cpos {
 		pos := sl.bounds.x1 - len(cpos) + i
 		sl.screen.SetContent(pos, sl.bounds.y1, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))

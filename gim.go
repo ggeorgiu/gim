@@ -37,13 +37,14 @@ type gim struct {
 
 func newGim(s tcell.Screen) *gim {
 	c := &cursor{screen: s}
+
 	g := gim{
 		running:    true,
 		screen:     s,
-		editor:     newEditor(s, c),
-		statusLine: newStatusLine(s),
-		cmdLine:    newCmdLine(s, c),
 		cursor:     c,
+		editor:     newEditor(s, c),
+		statusLine: newStatusLine(s, c),
+		cmdLine:    newCmdLine(s, c),
 	}
 
 	return &g
@@ -68,9 +69,9 @@ func (g *gim) Run() {
 func (g *gim) Refresh() {
 	w, h := g.screen.Size()
 
-	g.editor.refresh(bounds{0, 0, 0, h - 4})
-	g.statusLine.refresh(bounds{w, 0, h - 3, 0})
-	g.cmdLine.refresh(bounds{0, 0, h - 2, 0})
+	g.editor.refresh(bounds{0, 0, 0, h - 3})
+	g.statusLine.refresh(bounds{w, 0, h - 2, 0})
+	g.cmdLine.refresh(bounds{0, 0, h - 1, 0})
 }
 
 func (g *gim) Draw() {
@@ -78,8 +79,6 @@ func (g *gim) Draw() {
 
 	g.cursor.draw()
 	g.editor.draw()
-
-	g.statusLine.setMode(g.mode)
 	g.statusLine.draw()
 
 	if g.mode == Command {
@@ -107,7 +106,7 @@ func (g *gim) handleCommandMode(ev *tcell.EventKey) {
 	case tcell.KeyESC:
 		g.editor.recvCursor()
 		g.cmdLine.reset()
-		g.mode = Normal
+		g.setMode(Normal)
 
 		return
 	case tcell.KeyEnter:
@@ -115,7 +114,7 @@ func (g *gim) handleCommandMode(ev *tcell.EventKey) {
 
 		g.editor.recvCursor()
 		g.cmdLine.reset()
-		g.mode = Normal
+		g.setMode(Normal)
 		return
 	default:
 		g.cmdLine.handleKey(ev)
@@ -136,10 +135,10 @@ func (g *gim) handleNormalMode(ev *tcell.EventKey) {
 	switch r {
 	case ':':
 		g.cmdLine.recvCursor()
-		g.mode = Command
+		g.setMode(Command)
 		return
 	case 'i':
-		g.mode = Insert
+		g.setMode(Insert)
 		return
 	case 'l':
 		g.cursor.right()
@@ -159,9 +158,14 @@ func (g *gim) handleNormalMode(ev *tcell.EventKey) {
 func (g *gim) handleInsertMode(ev *tcell.EventKey) {
 	switch ev.Key() {
 	case tcell.KeyESC:
-		g.mode = Normal
+		g.setMode(Normal)
 		return
 	default:
 		g.editor.handleKeyInInsertMode(ev)
 	}
+}
+
+func (g *gim) setMode(m mode) {
+	g.statusLine.setMode(m)
+	g.mode = m
 }
