@@ -106,14 +106,16 @@ func (g *gim) handleCommandMode(ev *tcell.EventKey) {
 	switch ev.Key() {
 	case tcell.KeyESC:
 		g.editor.recvCursor()
+		g.cmdLine.reset()
 		g.mode = Normal
 
 		return
 	case tcell.KeyEnter:
-		g.editor.recvCursor()
-		g.mode = Normal
-
 		g.execCmd()
+
+		g.editor.recvCursor()
+		g.cmdLine.reset()
+		g.mode = Normal
 		return
 	default:
 		g.cmdLine.handleKey(ev)

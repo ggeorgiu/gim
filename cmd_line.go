@@ -53,3 +53,7 @@ func (c *cmdLine) recvCursor() {
 	c.cursor.x = c.bound.x1 + 4
 	c.cursor.y = c.bound.y1
 }
+
+func (c *cmdLine) reset() {
+	c.cmd = ""
+}
