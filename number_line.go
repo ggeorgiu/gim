@@ -12,7 +12,7 @@ type numberLine struct {
 	editor *editor
 }
 
-func newNumberLine(s tcell.Screen, e *editor, c *cursor) *numberLine {
+func newNumberLine(s tcell.Screen, e *editor) *numberLine {
 	return &numberLine{
 		screen: s,
 		editor: e,

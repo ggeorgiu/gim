@@ -25,6 +25,11 @@ func (m mode) String() string {
 	}
 }
 
+const (
+	numberLineWidth  = 4
+	editorColumStart = 5
+)
+
 type gim struct {
 	running    bool
 	mode       mode
@@ -37,9 +42,9 @@ type gim struct {
 }
 
 func newGim(s tcell.Screen) *gim {
-	c := &cursor{screen: s, x: 5}
+	c := &cursor{screen: s, x: editorColumStart}
 	e := newEditor(s, c)
-	nl := newNumberLine(s, e, c)
+	nl := newNumberLine(s, e)
 
 	g := gim{
 		running:    true,
@@ -73,10 +78,10 @@ func (g *gim) Run() {
 func (g *gim) Refresh() {
 	w, h := g.screen.Size()
 
-	g.editor.refresh(bounds{5, 0, 0, h - 3})
-	g.numberLine.refresh(bounds{0, 4, 0, h})
-	g.statusLine.refresh(bounds{w, 0, h - 2, 0})
-	g.cmdLine.refresh(bounds{0, 0, h - 1, 0})
+	g.editor.refresh(bounds{editorColumStart, w, 0, h - 3})
+	g.statusLine.refresh(lineBounds{x: w, y: h - 2})
+	g.numberLine.refresh(bounds{0, numberLineWidth, 0, h})
+	g.cmdLine.refresh(lineBounds{0, h - 1})
 }
 
 func (g *gim) Draw() {

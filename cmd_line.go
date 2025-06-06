@@ -8,7 +8,7 @@ import (
 type cmdLine struct {
 	screen tcell.Screen
 	cursor *cursor
-	bound  bounds
+	bound  lineBounds
 	cmd    string
 }
 
@@ -37,21 +37,21 @@ func (c *cmdLine) handleKey(ev *tcell.EventKey) {
 	c.cursor.right()
 }
 
-func (c *cmdLine) refresh(b bounds) {
+func (c *cmdLine) refresh(b lineBounds) {
 	c.bound = b
 }
 
 func (c *cmdLine) draw() {
 	line := fmt.Sprintf(">> :%s", c.cmd)
 	for i, ch := range line {
-		c.screen.SetContent(i, c.bound.y1, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))
+		c.screen.SetContent(i, c.bound.y, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))
 	}
 }
 
 func (c *cmdLine) recvCursor() {
 	c.cursor.hold()
-	c.cursor.x = c.bound.x1 + 4
-	c.cursor.y = c.bound.y1
+	c.cursor.x = c.bound.x + 4
+	c.cursor.y = c.bound.y
 }
 
 func (c *cmdLine) reset() {

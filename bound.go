@@ -6,3 +6,8 @@ type bounds struct {
 	y1 int
 	y2 int
 }
+
+type lineBounds struct {
+	x int
+	y int
+}
