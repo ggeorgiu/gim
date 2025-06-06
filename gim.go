@@ -140,18 +140,8 @@ func (g *gim) handleNormalMode(ev *tcell.EventKey) {
 	case 'i':
 		g.setMode(insert)
 		return
-	case 'l':
-		g.cursor.right()
-		return
-	case 'h':
-		g.cursor.left()
-		return
-	case 'j':
-		g.cursor.down()
-		return
-	case 'k':
-		g.cursor.up()
-		return
+	default:
+		g.editor.handleKeyInNormalMode(ev)
 	}
 }
 
