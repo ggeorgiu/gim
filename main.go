@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/gdamore/tcell/v2"
+	"io"
 	"log/slog"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -13,10 +15,21 @@ func main() {
 	}
 }
 
-func run(_ []string) error {
+func run(args []string) error {
 	logFile, err := os.OpenFile(".debug/debug.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
+	}
+
+	var content io.Reader
+	content = strings.NewReader("")
+	if len(args) == 2 {
+		file, err := os.Open(args[1])
+		if err != nil {
+			return err
+		}
+
+		content = file
 	}
 
 	handler := slog.NewTextHandler(logFile, nil)
@@ -30,7 +43,16 @@ func run(_ []string) error {
 		return fmt.Errorf("failed to init scren, err: %w", err)
 	}
 
-	g := newGim(screen)
+	c := &cursor{screen: screen, x: editorColumStart}
+	e, err := newEditor(screen, c, content)
+	if err != nil {
+		return err
+	}
+	nl := newNumberLine(screen, e)
+
+	sl := newStatusLine(screen, e)
+	cl := newCmdLine(screen, c)
+	g := newGim(screen, c, e, nl, sl, cl)
 	g.Run()
 
 	return nil

@@ -41,19 +41,22 @@ type gim struct {
 	numberLine *numberLine
 }
 
-func newGim(s tcell.Screen) *gim {
-	c := &cursor{screen: s, x: editorColumStart}
-	e := newEditor(s, c)
-	nl := newNumberLine(s, e)
-
+func newGim(
+	s tcell.Screen,
+	c *cursor,
+	e *editor,
+	nl *numberLine,
+	sl *statusLine,
+	cl *cmdLine,
+) *gim {
 	g := gim{
 		running:    true,
 		screen:     s,
 		cursor:     c,
 		numberLine: nl,
 		editor:     e,
-		statusLine: newStatusLine(s, e),
-		cmdLine:    newCmdLine(s, c),
+		statusLine: sl,
+		cmdLine:    cl,
 	}
 
 	return &g

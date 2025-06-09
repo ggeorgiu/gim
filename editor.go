@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/gdamore/tcell/v2"
+	"io"
+	"strings"
 )
 
 type editor struct {
@@ -12,14 +14,24 @@ type editor struct {
 	content []string
 }
 
-func newEditor(screen tcell.Screen, c *cursor) *editor {
+func newEditor(screen tcell.Screen, c *cursor, content io.Reader) (*editor, error) {
+	all, err := io.ReadAll(content)
+	if err != nil {
+		return nil, err
+	}
+
 	e := editor{
 		screen:  screen,
-		content: []string{""},
+		content: toSlice(all),
 		cursor:  c,
 	}
 
-	return &e
+	return &e, nil
+}
+
+func toSlice(all []byte) []string {
+	val := string(all)
+	return strings.Split(val, "\n")
 }
 
 func (e *editor) refresh(b bounds) {
