@@ -7,3 +7,6 @@ bin_dir := root_dir + "/bin"
 
 build:
     {{go}} build  -o {{bin_dir}}/ .
+
+lint:
+   golangci-lint run --fix

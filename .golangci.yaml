@@ -1,0 +1,80 @@
+version: "2"
+linters:
+  default: all
+  disable:
+    - exhaustive
+    - cyclop
+    - depguard
+    - dupl
+    - dupword
+    - err113
+    - errorlint
+    - exhaustruct
+    - forcetypeassert
+    - funlen
+    - gochecknoglobals
+    - gocognit
+    - goconst
+    - gocyclo
+    - godot
+    - godox
+    - gosmopolitan
+    - inamedparam
+    - ireturn
+    - lll
+    - maintidx
+    - mnd
+    - nestif
+    - nilnil
+    - nlreturn
+    - nonamedreturns
+    - paralleltest
+    - perfsprint
+    - tagliatelle
+    - testpackage
+    - varnamelen
+    - wrapcheck
+    - wsl
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    exhaustive:
+      default-signifies-exhaustive: true
+    goconst:
+      min-len: 3
+      min-occurrences: 3
+    gocritic:
+      enabled-checks:
+        - ruleguard
+    nolintlint:
+      require-specific: true
+    prealloc:
+      for-loops: true
+    revive:
+      rules:
+        - name: exported
+          disabled: true
+        - name: context-as-argument
+          disabled: false
+    sloglint:
+      context: "scope"
+    usetesting:
+      os-setenv: true
+      os-temp-dir: true
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/ggeorgiu/gim)
+    gofmt:
+      rewrite-rules:
+        - pattern: interface{}
+          replacement: any

@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/gdamore/tcell/v2"
 	"io"
 	"strings"
+
+	"github.com/gdamore/tcell/v2"
 )
 
 type editor struct {
@@ -124,6 +125,7 @@ func (e *editor) cursorX() int {
 
 	return e.cursor.x - e.bounds.x1
 }
+
 func (e *editor) cursorY() int {
 	if e.mode == command {
 		return e.cursor.prevY

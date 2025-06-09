@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/gdamore/tcell/v2"
 	"io"
 	"log/slog"
 	"os"
 	"strings"
+
+	"github.com/gdamore/tcell/v2"
 )
 
 func main() {
@@ -16,7 +17,7 @@ func main() {
 }
 
 func run(args []string) error {
-	logFile, err := os.OpenFile(".debug/debug.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+	logFile, err := os.OpenFile(".debug/debug.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
 	if err != nil {
 		return err
 	}

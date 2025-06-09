@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/gdamore/tcell/v2"
 	"math"
+
+	"github.com/gdamore/tcell/v2"
 )
 
 type numberLine struct {
@@ -20,7 +21,7 @@ func newNumberLine(s tcell.Screen, e *editor) *numberLine {
 }
 
 func (nl *numberLine) draw() {
-	for y := 0; y < len(nl.editor.content); y++ {
+	for y := range nl.editor.content {
 		val := fmt.Sprintf("%2d │", int(math.Abs(float64(nl.editor.cursorY()-y))))
 		if y == nl.editor.cursorY() {
 			val = fmt.Sprintf(" %2d│", y)

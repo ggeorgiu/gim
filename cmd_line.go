@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -22,8 +23,7 @@ func newCmdLine(s tcell.Screen, c *cursor) *cmdLine {
 }
 
 func (c *cmdLine) handleKey(ev *tcell.EventKey) {
-	switch ev.Key() {
-	case tcell.KeyDEL:
+	if ev.Key() == tcell.KeyDEL {
 		if len(c.cmd) == 0 {
 			return
 		}
@@ -33,7 +33,7 @@ func (c *cmdLine) handleKey(ev *tcell.EventKey) {
 	}
 
 	r := ev.Rune()
-	c.cmd = c.cmd + string(r)
+	c.cmd += string(r)
 	c.cursor.right()
 }
 
