@@ -11,6 +11,7 @@ type cmdLine struct {
 	cursor *cursor
 	bound  lineBounds
 	cmd    string
+	status string
 }
 
 func newCmdLine(s tcell.Screen, c *cursor) *cmdLine {
@@ -45,6 +46,10 @@ func (c *cmdLine) draw() {
 	line := fmt.Sprintf(">> :%s", c.cmd)
 	for i, ch := range line {
 		c.screen.SetContent(i, c.bound.y, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))
+	}
+
+	for i, ch := range c.status {
+		c.screen.SetContent(i+15, c.bound.y, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorRed))
 	}
 }
 

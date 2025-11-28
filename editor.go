@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"os"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -9,22 +10,28 @@ import (
 
 type editor struct {
 	screen  tcell.Screen
+	file    *os.File
 	cursor  *cursor
 	bounds  bounds
 	mode    mode
 	content []string
 }
 
-func newEditor(screen tcell.Screen, c *cursor, content io.Reader) (*editor, error) {
-	all, err := io.ReadAll(content)
-	if err != nil {
-		return nil, err
+func newEditor(screen tcell.Screen, c *cursor, file *os.File) (*editor, error) {
+	var all []byte
+	if file != nil {
+		c, err := io.ReadAll(file)
+		if err != nil {
+			return nil, err
+		}
+		all = c
 	}
 
 	e := editor{
 		screen:  screen,
-		content: toSlice(all),
 		cursor:  c,
+		content: toSlice(all),
+		file:    file,
 	}
 
 	return &e, nil
@@ -136,4 +143,19 @@ func (e *editor) cursorY() int {
 
 func (e *editor) setMode(m mode) {
 	e.mode = m
+}
+
+func (e *editor) saveContent() error {
+	var content []byte
+	for i := 0; i < len(e.content)-1; i++ {
+		content = append(content, []byte(e.content[i])...)
+		content = append(content, []byte("\n")...)
+	}
+	content = append(content, []byte(e.content[len(e.content)-1])...)
+	err := os.WriteFile(e.file.Name(), content, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

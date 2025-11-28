@@ -1,7 +1,7 @@
 ## GIM
 - vim-like text editor built it go
 - lightweight, for-fun, personal project
-
+iii
 #### Modes
 - COMMAND
 - NORMAL

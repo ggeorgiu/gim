@@ -2,10 +2,8 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log/slog"
 	"os"
-	"strings"
 
 	"github.com/gdamore/tcell/v2"
 )
@@ -21,16 +19,15 @@ func run(args []string) error {
 	if err != nil {
 		return err
 	}
+	defer logFile.Close()
 
-	var content io.Reader
-	content = strings.NewReader("")
+	var file *os.File
 	if len(args) == 2 {
-		file, err := os.Open(args[1])
+		file, err = os.OpenFile(args[1], os.O_RDWR, 0)
 		if err != nil {
 			return err
 		}
-
-		content = file
+		defer file.Close()
 	}
 
 	handler := slog.NewTextHandler(logFile, nil)
@@ -45,7 +42,7 @@ func run(args []string) error {
 	}
 
 	c := &cursor{screen: screen, x: editorColumStart}
-	e, err := newEditor(screen, c, content)
+	e, err := newEditor(screen, c, file)
 	if err != nil {
 		return err
 	}

@@ -119,6 +119,11 @@ func (g *gim) execCmd() {
 	case "q":
 		g.running = false
 		return
+	case "w":
+		if err := g.saveContent(); err != nil {
+			g.cmdLine.status = err.Error()
+		}
+		return
 	default:
 	}
 }
@@ -151,4 +156,8 @@ func (g *gim) handleInsertMode(ev *tcell.EventKey) {
 func (g *gim) setMode(m mode) {
 	g.editor.setMode(m)
 	g.mode = m
+}
+
+func (g *gim) saveContent() error {
+	return g.editor.saveContent()
 }
