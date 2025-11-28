@@ -8,14 +8,20 @@ type cursor struct {
 	y      int
 	prevX  int
 	prevY  int
+	isHold bool
 }
 
 func (c *cursor) hold() {
+	c.isHold = true
 	c.prevX = c.x
 	c.prevY = c.y
 }
 
 func (c *cursor) rev() {
+	if !c.isHold {
+		return
+	}
+
 	c.x = c.prevX
 	c.y = c.prevY
 }

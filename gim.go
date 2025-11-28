@@ -4,41 +4,20 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-type mode int
-
-const (
-	normal mode = iota
-	insert
-	command
-)
-
-func (m mode) String() string {
-	switch m {
-	case normal:
-		return "NRM"
-	case insert:
-		return "INS"
-	case command:
-		return "CMD"
-	default:
-		return "???"
-	}
-}
-
 const (
 	numberLineWidth  = 4
 	editorColumStart = 5
 )
 
 type gim struct {
-	running    bool
-	mode       mode
 	screen     tcell.Screen
+	mode       mode
 	cursor     *cursor
 	editor     *editor
 	statusLine *statusLine
 	cmdLine    *cmdLine
 	numberLine *numberLine
+	running    bool
 }
 
 func newGim(
@@ -82,9 +61,9 @@ func (g *gim) Refresh() {
 	w, h := g.screen.Size()
 
 	g.editor.refresh(bounds{editorColumStart, w, 0, h - 3})
-	g.statusLine.refresh(lineBounds{x: w, y: h - 2})
-	g.numberLine.refresh(bounds{0, numberLineWidth, 0, h})
 	g.cmdLine.refresh(lineBounds{0, h - 1})
+	g.statusLine.refresh(lineBounds{x: w, y: h - 2})
+	g.numberLine.refresh(columnBounds{0, h, numberLineWidth})
 }
 
 func (g *gim) Draw() {

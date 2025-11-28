@@ -11,3 +11,9 @@ type lineBounds struct {
 	x int
 	y int
 }
+
+type columnBounds struct {
+	x     int
+	y     int
+	width int
+}

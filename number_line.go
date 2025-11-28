@@ -9,7 +9,7 @@ import (
 
 type numberLine struct {
 	screen tcell.Screen
-	bounds bounds
+	bounds columnBounds
 	editor *editor
 }
 
@@ -20,6 +20,10 @@ func newNumberLine(s tcell.Screen, e *editor) *numberLine {
 	}
 }
 
+func (nl *numberLine) refresh(b columnBounds) {
+	nl.bounds = b
+}
+
 func (nl *numberLine) draw() {
 	for y := range nl.editor.content {
 		val := fmt.Sprintf("%2d │", int(math.Abs(float64(nl.editor.cursorY()-y))))
@@ -28,11 +32,7 @@ func (nl *numberLine) draw() {
 		}
 
 		for x, r := range val {
-			nl.screen.SetContent(nl.bounds.x1+x, y, r, nil, tcell.StyleDefault)
+			nl.screen.SetContent(nl.bounds.x+x, y, r, nil, tcell.StyleDefault)
 		}
 	}
-}
-
-func (nl *numberLine) refresh(b bounds) {
-	nl.bounds = b
 }
