@@ -22,6 +22,7 @@ Just like vim, the editor has modes of operating it, enabling/disabling features
 
 - current mode
 - cursor position
+- show error
 
 #### Line number
 
