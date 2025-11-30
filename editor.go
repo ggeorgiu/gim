@@ -9,10 +9,9 @@ import (
 )
 
 type slidingView struct {
-	height   int
-	from     int
-	to       int
-	cursorAt int
+	height int
+	from   int
+	to     int
 }
 
 func (sv *slidingView) down(maxLen int) {
@@ -32,23 +31,26 @@ func (sv *slidingView) up() {
 	sv.to--
 }
 
-func (sv *slidingView) cursorUp() {
-	sv.cursorAt--
-}
-
-func (sv *slidingView) cursorDown() {
-	sv.cursorAt++
-}
-
 type editor struct {
-	screen      tcell.Screen
-	file        *os.File
-	cursor      *cursor
-	bounds      bounds
-	mode        mode
-	content     []string
-	slidingView slidingView
-	lineIdx     int
+	screen       tcell.Screen
+	file         *os.File
+	cursor       *cursor
+	bounds       bounds
+	mode         mode
+	content      []string
+	slidingView  slidingView
+	lineIdx      int
+	cursorLineAt int
+	cursorColAt  int
+	maxCol       int
+}
+
+func (e *editor) cursorUp() {
+	e.cursorLineAt--
+}
+
+func (e *editor) cursorDown() {
+	e.cursorLineAt++
 }
 
 func newEditor(screen tcell.Screen, c *cursor, file *os.File) (*editor, error) {
@@ -80,6 +82,7 @@ func toSlice(all []byte) []string {
 func (e *editor) refresh(b bounds) {
 	e.bounds = b
 	e.slidingView.height = b.y2
+
 	if e.slidingView.to == 0 {
 		e.slidingView.to = e.slidingView.height
 	} else {
@@ -120,7 +123,7 @@ func (e *editor) handleKeyInInsertMode(ev *tcell.EventKey) {
 func (e *editor) handleKeyInNormalMode(ev *tcell.EventKey) {
 	switch ev.Rune() {
 	case 'l':
-		if e.cursor.x == len(e.currentLine()) {
+		if e.cursor.x == len(e.currentLine())+e.bounds.x1 {
 			return
 		}
 
@@ -144,7 +147,11 @@ func (e *editor) handleKeyInNormalMode(ev *tcell.EventKey) {
 		}
 
 		e.cursor.down()
-		e.slidingView.cursorDown()
+		e.cursorDown()
+
+		if e.cursor.x >= len(e.currentLine())+e.bounds.x1 {
+			e.cursor.x = len(e.currentLine()) + e.bounds.x1 - 1
+		}
 		return
 	case 'k':
 		if e.lineIdx > 0 {
@@ -157,7 +164,11 @@ func (e *editor) handleKeyInNormalMode(ev *tcell.EventKey) {
 		}
 
 		e.cursor.up()
-		e.slidingView.cursorUp()
+		e.cursorUp()
+
+		if e.cursor.x >= len(e.currentLine())+e.bounds.x1 {
+			e.cursor.x = len(e.currentLine()) + e.bounds.x1 - 1
+		}
 		return
 	}
 }
@@ -208,6 +219,7 @@ func (e *editor) saveContent() error {
 		content = append(content, []byte("\n")...)
 	}
 	content = append(content, []byte(e.content[len(e.content)-1])...)
+
 	err := os.WriteFile(e.file.Name(), content, 0644)
 	if err != nil {
 		return err

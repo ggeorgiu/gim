@@ -4,13 +4,14 @@
 
 - [ ] refactor
   - tidy up implementation
+  - have a central manager that manages everything
 
 ### Fixes
-- [ ] when going up/down cursor should not go over end of line
 
 
 ## DONE 
 
+- [x] when going up/down cursor should not go over end of line
 - [x] open file and display content
 - [x] save content back to file
 - [x] scroll over content

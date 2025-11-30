@@ -26,6 +26,11 @@ func (c *cursor) rev() {
 	c.y = c.prevY
 }
 
+func (c *cursor) at(x, y int) {
+	c.x = x
+	c.y = y
+}
+
 func (c *cursor) up() {
 	c.y--
 }
