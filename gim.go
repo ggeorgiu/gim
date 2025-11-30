@@ -121,7 +121,7 @@ func (g *gim) execCmd() {
 		return
 	case "w":
 		if err := g.saveContent(); err != nil {
-			g.cmdLine.status = err.Error()
+			g.statusLine.error(err.Error())
 		}
 		return
 	default:

@@ -10,6 +10,7 @@ type statusLine struct {
 	screen tcell.Screen
 	bounds lineBounds
 	editor *editor
+	status string
 }
 
 func newStatusLine(s tcell.Screen, e *editor) *statusLine {
@@ -31,9 +32,21 @@ func (sl *statusLine) draw() {
 		sl.screen.SetContent(i, sl.bounds.y, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))
 	}
 
+	if sl.status != "" {
+		status := fmt.Sprintf(" E: [ %s ]", sl.status)
+		for i, ch := range status {
+			pos := len(line) + i + 1
+			sl.screen.SetContent(pos, sl.bounds.y, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorRed))
+		}
+	}
+
 	cpos := fmt.Sprintf("[ line: %2d | col: %2d ]", sl.editor.cursorY(), sl.editor.cursorX())
 	for i, ch := range cpos {
 		pos := sl.bounds.x - len(cpos) + i
 		sl.screen.SetContent(pos, sl.bounds.y, ch, nil, tcell.StyleDefault.Foreground(tcell.ColorYellow))
 	}
+}
+
+func (sl *statusLine) error(val string) {
+	sl.status = val
 }
