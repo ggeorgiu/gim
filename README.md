@@ -4,7 +4,7 @@ Vim-like text editor built in Go. Lightweight, for-fun, personal project.
 
 ### Modes
 
-Just like vim, the editor has modes of operating it, enabling/disabling features.
+Just like `vim`, the editor has modes of operating it, each with its own features.
 
 - NORMAL
     - In this mode you can move the cursor throughout the editor. This is the default mode.

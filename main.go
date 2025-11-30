@@ -47,10 +47,10 @@ func run(args []string) error {
 		return err
 	}
 	nl := newNumberLine(screen, e)
-
 	sl := newStatusLine(screen, e)
 	cl := newCmdLine(screen, c)
 	g := newGim(screen, c, e, nl, sl, cl)
+
 	g.Run()
 
 	return nil

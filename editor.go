@@ -2,7 +2,6 @@ package main
 
 import (
 	"io"
-	"log/slog"
 	"os"
 	"strings"
 
@@ -10,9 +9,10 @@ import (
 )
 
 type slidingView struct {
-	height int
-	from   int
-	to     int
+	height   int
+	from     int
+	to       int
+	cursorAt int
 }
 
 func (sv *slidingView) down(maxLen int) {
@@ -32,6 +32,14 @@ func (sv *slidingView) up() {
 	sv.to--
 }
 
+func (sv *slidingView) cursorUp() {
+	sv.cursorAt--
+}
+
+func (sv *slidingView) cursorDown() {
+	sv.cursorAt++
+}
+
 type editor struct {
 	screen      tcell.Screen
 	file        *os.File
@@ -40,6 +48,7 @@ type editor struct {
 	mode        mode
 	content     []string
 	slidingView slidingView
+	lineIdx     int
 }
 
 func newEditor(screen tcell.Screen, c *cursor, file *os.File) (*editor, error) {
@@ -125,31 +134,37 @@ func (e *editor) handleKeyInNormalMode(ev *tcell.EventKey) {
 		e.cursor.left()
 		return
 	case 'j':
-		if e.cursor.y == len(e.content)-1 {
-			return
+		if e.lineIdx < len(e.content)-1 {
+			e.lineIdx++
 		}
+
 		if e.cursor.y == e.slidingView.height-1 {
-			e.slidingView.down(len(e.content) - 1)
+			e.slidingView.down(len(e.content))
 			return
 		}
 
 		e.cursor.down()
+		e.slidingView.cursorDown()
 		return
 	case 'k':
+		if e.lineIdx > 0 {
+			e.lineIdx--
+		}
+
 		if e.cursor.y == e.bounds.y1 {
 			e.slidingView.up()
 			return
 		}
 
 		e.cursor.up()
+		e.slidingView.cursorUp()
 		return
 	}
 }
 
 func (e *editor) draw() {
 	var idx int
-	slog.Info("from and to", "from", e.slidingView.from, "to", e.slidingView.to)
-	for i := e.slidingView.from; i < e.slidingView.to; i++ {
+	for i := e.slidingView.from; i < e.slidingView.to-1; i++ {
 		line := e.content[i]
 		for x, ch := range line {
 			e.screen.SetContent(x+e.bounds.x1, idx+e.bounds.y1, ch, nil, tcell.StyleDefault)
