@@ -63,7 +63,7 @@ func (g *gim) Refresh() {
 	g.editor.refresh(bounds{editorColumStart, w, 0, h - 3})
 	g.cmdLine.refresh(lineBounds{0, h - 1})
 	g.statusLine.refresh(lineBounds{x: w, y: h - 2})
-	g.numberLine.refresh(columnBounds{0, h, numberLineWidth})
+	g.numberLine.refresh(columnBounds{0, h - 3, numberLineWidth})
 }
 
 func (g *gim) Draw() {

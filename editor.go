@@ -2,19 +2,44 @@ package main
 
 import (
 	"io"
+	"log/slog"
 	"os"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
 )
 
+type slidingView struct {
+	height int
+	from   int
+	to     int
+}
+
+func (sv *slidingView) down(maxLen int) {
+	if sv.to == maxLen {
+		return
+	}
+
+	sv.from++
+	sv.to++
+}
+func (sv *slidingView) up() {
+	if sv.from == 0 {
+		return
+	}
+
+	sv.from--
+	sv.to--
+}
+
 type editor struct {
-	screen  tcell.Screen
-	file    *os.File
-	cursor  *cursor
-	bounds  bounds
-	mode    mode
-	content []string
+	screen      tcell.Screen
+	file        *os.File
+	cursor      *cursor
+	bounds      bounds
+	mode        mode
+	content     []string
+	slidingView slidingView
 }
 
 func newEditor(screen tcell.Screen, c *cursor, file *os.File) (*editor, error) {
@@ -28,10 +53,11 @@ func newEditor(screen tcell.Screen, c *cursor, file *os.File) (*editor, error) {
 	}
 
 	e := editor{
-		screen:  screen,
-		cursor:  c,
-		content: toSlice(all),
-		file:    file,
+		screen:      screen,
+		cursor:      c,
+		content:     toSlice(all),
+		file:        file,
+		slidingView: slidingView{},
 	}
 
 	return &e, nil
@@ -44,6 +70,12 @@ func toSlice(all []byte) []string {
 
 func (e *editor) refresh(b bounds) {
 	e.bounds = b
+	e.slidingView.height = b.y2
+	if e.slidingView.to == 0 {
+		e.slidingView.to = e.slidingView.height
+	} else {
+		e.slidingView.to = e.slidingView.to - (e.slidingView.to - e.slidingView.height)
+	}
 }
 
 func (e *editor) handleKeyInInsertMode(ev *tcell.EventKey) {
@@ -96,11 +128,16 @@ func (e *editor) handleKeyInNormalMode(ev *tcell.EventKey) {
 		if e.cursor.y == len(e.content)-1 {
 			return
 		}
+		if e.cursor.y == e.slidingView.height-1 {
+			e.slidingView.down(len(e.content) - 1)
+			return
+		}
 
 		e.cursor.down()
 		return
 	case 'k':
 		if e.cursor.y == e.bounds.y1 {
+			e.slidingView.up()
 			return
 		}
 
@@ -110,10 +147,14 @@ func (e *editor) handleKeyInNormalMode(ev *tcell.EventKey) {
 }
 
 func (e *editor) draw() {
-	for y, line := range e.content {
+	var idx int
+	slog.Info("from and to", "from", e.slidingView.from, "to", e.slidingView.to)
+	for i := e.slidingView.from; i < e.slidingView.to; i++ {
+		line := e.content[i]
 		for x, ch := range line {
-			e.screen.SetContent(x+e.bounds.x1, y+e.bounds.y1, ch, nil, tcell.StyleDefault)
+			e.screen.SetContent(x+e.bounds.x1, idx+e.bounds.y1, ch, nil, tcell.StyleDefault)
 		}
+		idx++
 	}
 }
 

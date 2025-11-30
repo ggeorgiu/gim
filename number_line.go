@@ -25,7 +25,7 @@ func (nl *numberLine) refresh(b columnBounds) {
 }
 
 func (nl *numberLine) draw() {
-	for y := range nl.editor.content {
+	for y := range nl.bounds.y {
 		val := fmt.Sprintf("%2d │", int(math.Abs(float64(nl.editor.cursorY()-y))))
 		if y == nl.editor.cursorY() {
 			val = fmt.Sprintf(" %2d│", y)
