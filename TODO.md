@@ -7,6 +7,7 @@
   - have a central manager that manages everything
 
 ### Fixes
+- [ ] fix the number line to not go over content length
 
 
 ## DONE 

@@ -137,6 +137,10 @@ func (e *editor) handleKeyInNormalMode(ev *tcell.EventKey) {
 		e.cursor.left()
 		return
 	case 'j':
+		if e.cursor.y == len(e.content)-1 {
+			return
+		}
+
 		if e.lineIdx < len(e.content)-1 {
 			e.lineIdx++
 		}
@@ -176,6 +180,10 @@ func (e *editor) handleKeyInNormalMode(ev *tcell.EventKey) {
 func (e *editor) draw() {
 	var idx int
 	for i := e.slidingView.from; i < e.slidingView.to-1; i++ {
+		if i >= len(e.content) {
+			continue
+		}
+
 		line := e.content[i]
 		for x, ch := range line {
 			e.screen.SetContent(x+e.bounds.x1, idx+e.bounds.y1, ch, nil, tcell.StyleDefault)
